@@ -68,6 +68,8 @@ def reducefn(k, vs):
     def isPrime(numTest):
         import math
         valNum = int(numTest)
+        if valNum == 2:
+            return True
         for m in range(2, int(math.ceil(valNum**.5)) + 1):
             if valNum % m == 0:
                 return False
@@ -99,4 +101,4 @@ fullTime = (endTime - startTime) / 60.0
 print("Time to run code: " + str(fullTime))
 print("Results: ")
 print(str(primes))
-print("Number or primes (Not Including 2) : " + str(len(primes)))
+print("Number or primes (From (including) 2 to (excluding) 10,000,000 ) : " + str(len(primes)))
