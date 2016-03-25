@@ -8,65 +8,72 @@ Created on Thu Mar 24 22:53:43 2016
 #!/usr/bin/env python
 import mincemeat
 import time
-import hashlib
+#import hashlib
     
 
 #Generate a list of numbers from 2 to 1 million.
-hasher = hashlib.md5()
+#hasher = hashlib.md5()
 #hasher.update('string')
 #hasher.hexdigest()[0:5]
 #97 - 122, 48 - 57
-passwordHash = 'd077f'
-
-data = {num: password for num in range(0, 4)}
 
 
-#The data must be enumerated in a dictionary, with integer keys so that the 
-#mincemeat code works. This is bc mincemeat expects inputs with an integer 
-#as key.
-datasource = dict(enumerate(data))
-
+'''
+This map function uses a dfs scheme to generate all possible passwords and their corresponding 
+hashes. By using dfs with a root string that can be set, these map functions for generating 
+all possible passwords can be distributed to multiple workers in the map-reduce 
+cluster.
+'''
 def mapfn(k, v):
+    import hashlib    
+    
+    def genComb(passwordHash, rootStr = "", maxSize = 4):   
+        stack = expandItem(rootStr)
+        hashList = []
+        while len(stack) > 0:
+            item = stack.pop()
+            #If first few entries in the hash equal the password hash, yield it.
+            hasher = hashlib.md5()
+            hasher.update(item)
+            hashStr = hasher.hexdigest()[0: len(passwordHash)]
+            if hashStr == passwordHash:
+                hashList.append((passwordHash, item))
+            
+            #Expand the set of items in the combination set.
+            if len(item) < maxSize:
+                for st in expandItem(item):
+                    stack.append(st)
+        return hashList
+
+    def expandItem(item):
+        charArray = range(97, 123)
+        charArray2 = range(48, 58)
+        charArray.extend(charArray2)
+        charArray = map(lambda item: chr(item), charArray)
+        retArray = [] 
+        for char in charArray:
+            retArray.append(char + item)
+        
+        return retArray    
+    
     '''
     Determine if a number is prime, and yield it if true.
-    '''    
-    charArray = range(97, 123)
-    charArray2 = range(48, 58)
-    charArray.extend(charArray2)    
-    
-    hasher = hashlib.md5()  
-    
-    
-    #For each character position, generate a new password hash.
-    for i0 in range(0, 1):
-        pass
-        
-        
-    #After all permutations have been generated, add the hash of the password and the password to the list.
-    #If an array has an item, the reduce it.
-    yield v, 1
-    
-        
-    
+    '''         
+    #Generate all combinations/permutations given the starting root, using dfs form.  
+    hashList = genComb(v[1], rootStr=v[0])
+                    
+    for item in hashList:
+        yield item[0], item[1]
     
 def reducefn(k, vs):
-        
-    
-    return vs
-    
+    return str(vs)
 
-def genComb(rootStrList = "", maxSize = 4):
-    #TODO: Add code to initialize the stack and run dfs for each root str.    
-    stack = expandItem(rootStrList)
-    while len(stack) > 0:
-        item = stack.pop()
-        print(item)
-        if len(item) < maxSize:
-            for st in expandItem(item):
-                stack.append(st)
-
-
-def expandItem(item):
+'''
+This method is the same as the expand method in the map function. It is duplicated so that 
+this function can be used to initialize the set of data passed to the map-reduce 
+workers.
+'''
+def initialChars(item):
     charArray = range(97, 123)
     charArray2 = range(48, 58)
     charArray.extend(charArray2)
@@ -77,21 +84,28 @@ def expandItem(item):
     
     return retArray
 
-    
-
+#Initialize the datasource.
+passwordHash = 'd077f'
+singleChars = initialChars("")
+data = map(lambda item: (item, passwordHash), singleChars)
+#The data must be enumerated in a dictionary, with integer keys so that the 
+#mincemeat code works. This is bc mincemeat expects inputs with an integer 
+#as key.
+datasource = dict(enumerate(data))
 
 #Set up the "Server", which is really the code to run on the mapreduce workers or "Client".
-#s = mincemeat.Server()
-#s.datasource = datasource
-#s.mapfn = mapfn
-#s.reducefn = reducefn
-#
-## Run the mapreduce job, and store the result in "results".
-#startTime = time.time()
-##Generate all numbers from 2 to 10,000,000 that are prime palindromes.
-#results = s.run_server(password="changeme")
-#endTime = time.time()
-#fullTime = (endTime - startTime) / 60.0
-#print("Time to run code: " + str(fullTime))
-#print("Results: ")
-#print(str(results))
+s = mincemeat.Server()
+s.datasource = datasource
+s.mapfn = mapfn
+s.reducefn = reducefn
+
+# Run the mapreduce job, and store the result in "results".
+print("Running server.")
+startTime = time.time()
+#Generate all possible passwords that hash to a given value.
+results = s.run_server(password="changeme")
+endTime = time.time()
+fullTime = (endTime - startTime)
+print("Time to run code: " + str(fullTime) + " seconds.")
+print("Results: ")
+print(str(results))
