@@ -8,15 +8,7 @@ Created on Thu Mar 24 22:53:43 2016
 #!/usr/bin/env python
 import mincemeat
 import time
-#import hashlib
-    
-
-#Generate a list of numbers from 2 to 1 million.
-#hasher = hashlib.md5()
-#hasher.update('string')
-#hasher.hexdigest()[0:5]
-#97 - 122, 48 - 57
-
+import sys
 
 '''
 This map function uses a dfs scheme to generate all possible passwords and their corresponding 
@@ -37,7 +29,7 @@ def mapfn(k, v):
             hasher.update(item)
             hashStr = hasher.hexdigest()[0: len(passwordHash)]
             if hashStr == passwordHash:
-                hashList.append((passwordHash, item))
+                hashList.append(('found', item))
             
             #Expand the set of items in the combination set.
             if len(item) < maxSize:
@@ -85,12 +77,12 @@ def initialChars(item):
     return retArray
 
 #Initialize the datasource.
-passwordHash = 'd077f'
+if len(sys.argv) <= 1:
+    sys.exit("Not enough arguments!")
+#Store password hash and generate initial data set.
+passwordHash = sys.argv[1]#'d077f'
 singleChars = initialChars("")
 data = map(lambda item: (item, passwordHash), singleChars)
-#The data must be enumerated in a dictionary, with integer keys so that the 
-#mincemeat code works. This is bc mincemeat expects inputs with an integer 
-#as key.
 datasource = dict(enumerate(data))
 
 #Set up the "Server", which is really the code to run on the mapreduce workers or "Client".
@@ -100,7 +92,7 @@ s.mapfn = mapfn
 s.reducefn = reducefn
 
 # Run the mapreduce job, and store the result in "results".
-print("Running server.")
+print("Attacking " + passwordHash)
 startTime = time.time()
 #Generate all possible passwords that hash to a given value.
 results = s.run_server(password="changeme")
