@@ -11,7 +11,7 @@ import mincemeat
     
 
 #Generate a list of numbers from 2 to 1 million.
-data = range(2, 1000000)
+data = range(2, 10000000)
 data = map(lambda item: str(item), data)
 
 #The data must be enumerated in a dictionary, with integer keys so that the 
@@ -24,7 +24,7 @@ currentKey = 0
 i = 0
 tempDict = {}
 for key in datasource.keys():
-    if i % 100 == 0:
+    if i % 1000 == 0:
         currentKey += 1
         tempDict[currentKey] = []
         tempDict[currentKey].append(datasource[key])
@@ -33,6 +33,8 @@ for key in datasource.keys():
         tempDict[currentKey].append(datasource[key])
         i += 1
 datasource = tempDict
+tempDict = None
+data = None
 
 '''
 Method uses
