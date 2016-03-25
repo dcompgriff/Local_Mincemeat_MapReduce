@@ -8,6 +8,7 @@ Created on Thu Mar 24 18:44:22 2016
 
 #!/usr/bin/env python
 import mincemeat
+import time
     
 
 #Generate a list of numbers from 2 to 1 million.
@@ -36,11 +37,7 @@ datasource = tempDict
 tempDict = None
 data = None
 
-'''
-Method uses
-'''            
-def isPrime(numTest):
-    pass
+
 
 def mapfn(k, v):
     '''
@@ -54,30 +51,52 @@ def mapfn(k, v):
                 return isPalindrome(strTest[1:-1])
             else:
                 return False
+    
     '''
     Determine if a number is prime, and yield it if true.
     '''    
     #Yield an amount for each key.
     for value in v:
         if isPalindrome(value):
-            yield value, 1
+            yield value, value
 
 
 def reducefn(k, vs):
     '''
+    Method uses
+    '''            
+    def isPrime(numTest):
+        import math
+        valNum = int(numTest)
+        for m in range(2, int(math.ceil(valNum**.5)) + 1):
+            if valNum % m == 0:
+                return False
+            else:
+                return True
+    '''
     Determine if a number is a palindrome.
     '''
-    #result = sum(vs)
-    return vs#result
-    
+    for value in vs:
+        if isPrime(value):
+            return True
+        else:
+            return False
 
-# Set up the "Server", which is really the code to run on the mapreduce workers or "Client".
+#Set up the "Server", which is really the code to run on the mapreduce workers or "Client".
 s = mincemeat.Server()
 s.datasource = datasource
 s.mapfn = mapfn
 s.reducefn = reducefn
 
 # Run the mapreduce job, and store the result in "results".
+startTime = time.time()
+#Generate all numbers from 2 to 10,000,000 that are prime palindromes.
 results = s.run_server(password="changeme")
-
-# Do more work here to calculate the final outputs. 
+#Pull just the numbers from the set of returned numbers.
+primes = map(lambda item2: item2[0], filter(lambda item: item[1], results.iteritems()))
+endTime = time.time()
+fullTime = (endTime - startTime) / 60.0
+print("Time to run code: " + str(fullTime))
+print("Results: ")
+print(str(primes))
+print("Number or primes (Not Including 2) : " + str(len(primes)))
