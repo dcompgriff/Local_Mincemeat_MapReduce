@@ -95,6 +95,13 @@ startTime = time.time()
 #Generate all numbers from 2 to 10,000,000 that are prime palindromes.
 results = s.run_server(password="changeme")
 #Pull just the numbers from the set of returned numbers.
+'''
+NOTE: No work is being done here. All of the calculations occur in the map and 
+reduce portions of the code. This code just checks which elements were marked as
+True after the reduce function. This could have been moved into the map function, 
+but doing a final filter for elements marked as True allows the map reduce 
+program to pipeline operations.
+'''
 primes = map(lambda item2: item2[0], filter(lambda item: item[1], results.iteritems()))
 endTime = time.time()
 fullTime = (endTime - startTime) / 60.0
